@@ -1,11 +1,12 @@
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BiblioScuola PRO V8 (Scanner Fix + Kids)</title>
+    <title>BiblioScuola PRO V9 (Super Scanner)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
     <style>
         :root { --primary: #5a67d8; --secondary: #764ba2; --bg: #f4f7f6; --success: #48bb78; --danger: #e53e3e; --warning: #ed8936; --gray: #718096; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -35,12 +36,9 @@
         .btn-danger { background: var(--danger); }
         .btn-warning { background: var(--warning); }
 
-        /* Scanner Camera */
-        #interactive.viewport { position: relative; width: 100%; height: 300px; overflow: hidden; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--primary); display: none; background: black; }
-        #interactive.viewport canvas, #interactive.viewport video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        /* Overlay box for scanner visual feedback */
-        .drawingBuffer { position: absolute; top: 0; left: 0; }
-
+        /* Scanner Box */
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 15px; display: none; border: 2px solid var(--primary); }
+        
         /* Search Results & Lists */
         .search-container { position: relative; }
         .search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 1000; border: 1px solid #e2e8f0; border-radius: 0 0 10px 10px; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -56,7 +54,7 @@
 </head>
 <body>
 
-<div class="header"><h1>📚 BiblioScuola PRO V8</h1></div>
+<div class="header"><h1>📚 BiblioScuola PRO V9</h1></div>
 
 <div class="container">
     <div class="stats">
@@ -75,7 +73,7 @@
     <div id="tab-pre" class="card active">
         <h3>Registra Uscita</h3>
         
-        <div id="interactive" class="viewport"></div>
+        <div id="reader"></div>
         <button id="btn-start-scan" class="btn btn-scan" onclick="toggleScanner()">📸 SCANSIONA ISBN</button>
 
         <label>📖 Libro Selezionato</label>
@@ -138,10 +136,11 @@
 </div>
 
 <script>
-    let books = JSON.parse(localStorage.getItem('lib_v8_books')) || [];
-    let kids = JSON.parse(localStorage.getItem('lib_v8_kids')) || [];
+    let books = JSON.parse(localStorage.getItem('lib_v9_books')) || [];
+    let kids = JSON.parse(localStorage.getItem('lib_v9_kids')) || [];
     let selectedBookId = null;
-    let scannerActive = false;
+    let html5QrCode = null; // Riferimento allo scanner
+    let isScanning = false;
 
     // --- NAVIGAZIONE ---
     function showTab(id, btn) {
@@ -149,7 +148,7 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         btn.classList.add('active');
-        if(scannerActive) stopScanner(); // Ferma camera se cambi scheda
+        if(isScanning) stopScanner(); // Ferma camera se cambi scheda
         render();
     }
 
@@ -158,107 +157,104 @@
         document.getElementById('f-k').style.display = (val === 'kid' ? 'block' : 'none');
     }
 
-    // --- LOGICA SCANNER POTENZIATA ---
+    // --- NUOVO SCANNER HTML5-QRCODE ---
     function toggleScanner() {
-        if(scannerActive) stopScanner(); else startScanner();
+        if(isScanning) stopScanner(); else startScanner();
     }
 
     function startScanner() {
-        const view = document.getElementById('interactive');
-        view.style.display = 'block';
-        document.getElementById('btn-start-scan').innerText = "⏳ AVVIO CAMERA...";
-
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: view,
-                constraints: {
-                    facingMode: "environment", // Usa camera posteriore
-                    width: { min: 640, ideal: 1280, max: 1920 }, // Risoluzione HD per leggere meglio
-                    height: { min: 480, ideal: 720, max: 1080 },
-                    aspectRatio: { min: 1, max: 2 }
-                }
-            },
-            locator: {
-                patchSize: "medium", // Aiuta a trovare il codice
-                halfSample: true
-            },
-            numOfWorkers: 2,
-            decoder: {
-                readers: ["ean_reader"] // Solo EAN per libri (più veloce)
-            },
-            locate: true // Attiva i quadratini verdi
-        }, function(err) {
-            if (err) { 
-                alert("Errore camera: " + err + "\nAssicurati di essere su HTTPS."); 
-                stopScanner(); 
-                return; 
-            }
-            Quagga.start();
-            scannerActive = true;
-            document.getElementById('btn-start-scan').innerText = "❌ CHIUDI CAMERA";
+        document.getElementById('reader').style.display = 'block';
+        document.getElementById('btn-start-scan').innerText = "❌ CHIUDI CAMERA";
+        
+        html5QrCode = new Html5Qrcode("reader");
+        
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 250, height: 150 }, // Box rettangolare per barcode
+            aspectRatio: 1.0
+        };
+        
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            onScanSuccess, 
+            onScanFailure
+        ).catch(err => {
+            alert("Errore avvio camera: " + err);
+            stopScanner();
         });
 
-        // Disegna i box verdi quando rileva qualcosa
-        Quagga.onProcessed(function(result) {
-            var drawingCtx = Quagga.canvas.ctx.overlay,
-                drawingCanvas = Quagga.canvas.dom.overlay;
-
-            if (result) {
-                if (result.boxes) {
-                    drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")));
-                    result.boxes.filter(function (box) {
-                        return box !== result.box;
-                    }).forEach(function (box) {
-                        Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
-                    });
-                }
-                if (result.box) {
-                    Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
-                }
-            }
-        });
-
-        // Quando trova il codice
-        Quagga.onDetected(function(data) {
-            const code = data.codeResult.code;
-            
-            // Suono beep (opzionale)
-            // let audio = new Audio('beep.mp3'); audio.play(); 
-
-            // Se siamo nella scheda PRESTITO
-            if(document.getElementById('tab-pre').classList.contains('active')) {
-                const book = books.find(b => b.id === code && !b.out);
-                if(book) {
-                    selectMatch('book', book.title, book.id);
-                    stopScanner();
-                    alert("✅ Libro trovato: " + book.title);
-                } else {
-                    // Feedback visivo momentaneo, ma non bloccare scanner
-                    console.log("Codice letto: " + code + " (non trovato o in prestito)");
-                }
-            } 
-            // Se siamo nella scheda GESTIONE (per aggiungere ID)
-            else if(document.getElementById('tab-adm').classList.contains('active')) {
-                document.getElementById('m-id').value = code;
-                stopScanner();
-                alert("Codice acquisito: " + code);
-            }
-        });
+        isScanning = true;
     }
 
     function stopScanner() {
-        Quagga.stop();
-        document.getElementById('interactive').style.display = 'none';
-        document.getElementById('btn-start-scan').innerText = "📸 SCANSIONA ISBN";
-        scannerActive = false;
+        if(html5QrCode) {
+            html5QrCode.stop().then(() => {
+                document.getElementById('reader').style.display = 'none';
+                document.getElementById('btn-start-scan').innerText = "📸 SCANSIONA ISBN";
+                html5QrCode.clear();
+                isScanning = false;
+            }).catch(err => console.log("Stop failed", err));
+        }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // Suono Beep
+        playSound();
+
+        // Se siamo in PRESTITO
+        if(document.getElementById('tab-pre').classList.contains('active')) {
+            const book = books.find(b => b.id === decodedText);
+            if(book) {
+                if(book.out) {
+                    alert("⚠️ Questo libro risulta già in prestito a " + book.kid);
+                } else {
+                    selectMatch('book', book.title, book.id);
+                    stopScanner();
+                    // Piccolo ritardo per mostrare alert
+                    setTimeout(() => alert("✅ Libro Trovato: " + book.title), 200);
+                }
+            } else {
+                stopScanner();
+                if(confirm("Libro non trovato in catalogo.\nISBN: " + decodedText + "\nVuoi aggiungerlo ora?")) {
+                    // Vai alla scheda admin e precompila
+                    showTab('tab-adm', document.querySelectorAll('.nav-btn')[3]);
+                    document.getElementById('add-type').value = 'book';
+                    toggleAddForm('book');
+                    document.getElementById('m-id').value = decodedText;
+                }
+            }
+        }
+        // Se siamo in ADMIN (Aggiunta)
+        else if(document.getElementById('tab-adm').classList.contains('active')) {
+            document.getElementById('m-id').value = decodedText;
+            stopScanner();
+            alert("Codice acquisito: " + decodedText);
+        }
+    }
+
+    function onScanFailure(error) {
+        // Non fare nulla, continua a cercare. 
+        // Questa funzione viene chiamata ad ogni frame che non ha un codice.
+    }
+
+    function playSound() {
+        // Semplice beep generato via AudioContext
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            osc.connect(ctx.destination);
+            osc.frequency.value = 1000;
+            osc.type = "sine";
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1);
+        } catch(e) {}
     }
 
     // --- GESTIONE DATI ---
     function sync() {
-        localStorage.setItem('lib_v8_books', JSON.stringify(books));
-        localStorage.setItem('lib_v8_kids', JSON.stringify(kids));
+        localStorage.setItem('lib_v9_books', JSON.stringify(books));
+        localStorage.setItem('lib_v9_kids', JSON.stringify(kids));
         render();
     }
 
@@ -286,23 +282,16 @@
         if(type === 'book') selectedBookId = id;
     }
 
-    // --- NUOVE FUNZIONI GESTIONE BAMBINI ---
+    // --- FUNZIONI BAMBINI E ADMIN ---
     function deleteKid(index) {
-        if(confirm("Sei sicuro di voler eliminare " + kids[index] + "?")) {
-            kids.splice(index, 1);
-            sync();
+        if(confirm("Eliminare " + kids[index] + "?")) {
+            kids.splice(index, 1); sync();
         }
     }
 
     function editKid(index) {
-        const oldName = kids[index];
-        const newName = prompt("Modifica nome:", oldName);
-        if(newName && newName.trim() !== "") {
-            kids[index] = newName.trim();
-            // Opzionale: aggiorna anche i prestiti attivi con il vecchio nome?
-            // Per ora lo lasciamo semplice.
-            sync();
-        }
+        const newName = prompt("Nuovo nome:", kids[index]);
+        if(newName) { kids[index] = newName.trim(); sync(); }
     }
 
     function manualAdd() {
@@ -310,16 +299,13 @@
         if(type === 'book') {
             const id = document.getElementById('m-id').value;
             const title = document.getElementById('m-title').value;
-            if(!id || !title) return alert("Inserisci ID e Titolo");
-            if(books.find(b => b.id === id)) return alert("ID già esistente!");
-            
+            if(!id || !title) return alert("Dati mancanti!");
+            if(books.find(b => b.id === id)) return alert("Libro già esistente!");
             books.push({ id: id, title: title, out: false, kid: '', date: '' });
-            document.getElementById('m-id').value = '';
-            document.getElementById('m-title').value = '';
+            document.getElementById('m-id').value = ''; document.getElementById('m-title').value = '';
         } else {
             const name = document.getElementById('m-k-name').value;
             if(!name) return alert("Inserisci Nome");
-            if(kids.includes(name)) return alert("Bambino già in lista!");
             kids.push(name);
             document.getElementById('m-k-name').value = '';
         }
@@ -328,99 +314,69 @@
 
     function execLoan() {
         const kid = document.getElementById('in-kid').value;
-        if(!kids.includes(kid)) return alert("Bambino non trovato nella lista!");
-        if(!selectedBookId) return alert("Seleziona un libro valido!");
+        if(!kids.includes(kid)) return alert("Bambino non registrato!");
+        if(!selectedBookId) return alert("Seleziona un libro!");
         
         const b = books.find(x => x.id === selectedBookId);
-        if(!b) return alert("Errore libro");
-
         b.out = true; b.kid = kid; b.date = new Date().toLocaleDateString();
         selectedBookId = null; sync();
         document.getElementById('in-kid').value = ''; document.getElementById('in-book').value = '';
-        alert("✅ Prestito registrato a " + kid);
+        alert("Prestito registrato!");
     }
 
     function execReturn(id) {
-        if(!confirm("Confermi il reso del libro?")) return;
-        const b = books.find(x => x.id === id);
-        b.out = false; b.kid = ''; b.date = '';
-        sync();
+        if(confirm("Confermi il reso?")) {
+            const b = books.find(x => x.id === id);
+            b.out = false; b.kid = ''; b.date = '';
+            sync();
+        }
     }
 
     function render() {
-        // Stats
         document.getElementById('s-tot').innerText = books.length;
         document.getElementById('s-pre').innerText = books.filter(x => x.out).length;
         document.getElementById('s-kids').innerText = kids.length;
 
-        // Lista Resi (Libri fuori)
         document.getElementById('list-res').innerHTML = books.filter(x => x.out).map(b => `
-            <div class="list-item">
-                <div><h4>${b.title}</h4><p>👦 ${b.kid} - 📅 ${b.date}</p></div>
-                <button class="btn btn-sm btn-success" onclick="execReturn('${b.id}')">RESO</button>
-            </div>
-        `).join('') || '<p style="text-align:center;color:#999">Nessun libro in prestito</p>';
+            <div class="list-item"><div><h4>${b.title}</h4><p>${b.kid} - ${b.date}</p></div><button class="btn btn-sm btn-success" onclick="execReturn('${b.id}')">RESO</button></div>
+        `).join('') || '<p>Nessun prestito.</p>';
 
-        // Lista Catalogo
         const q = document.getElementById('search-cat').value.toLowerCase();
         document.getElementById('list-cat').innerHTML = books.filter(x => x.title.toLowerCase().includes(q)).map(b => `
-            <div class="list-item">
-                <div><h4>${b.title}</h4><p style="font-size:0.8rem;color:#666">ISBN: ${b.id}</p></div>
-                <span style="font-weight:bold; color:${b.out?'var(--danger)':'var(--success)'}">${b.out?'FUORI':'DISP.'}</span>
-            </div>
+            <div class="list-item"><div><h4>${b.title}</h4><small>ISBN: ${b.id}</small></div><span>${b.out?'🔴':'🟢'}</span></div>
         `).join('');
 
-        // Lista Bambini (Admin)
         document.getElementById('admin-kids-list').innerHTML = kids.map((k, i) => `
-            <div class="kid-item">
-                <span>${k}</span>
-                <div class="kid-actions">
-                    <button class="btn btn-sm btn-warning" onclick="editKid(${i})">✏️</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteKid(${i})">🗑️</button>
-                </div>
-            </div>
-        `).join('') || '<p>Nessun bambino registrato.</p>';
+            <div class="kid-item"><span>${k}</span><div class="kid-actions"><button class="btn btn-sm btn-warning" onclick="editKid(${i})">✏️</button><button class="btn btn-sm btn-danger" onclick="deleteKid(${i})">🗑️</button></div></div>
+        `).join('');
     }
 
     function exportToExcel() {
-        const ws = XLSX.utils.json_to_sheet(books);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Libri");
-        XLSX.writeFile(wb, "Biblio_Backup.xlsx");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(books), "Libri");
+        XLSX.writeFile(wb, "Backup_Biblio.xlsx");
     }
 
     function importFromExcel() {
-        const file = document.getElementById('xl-input').files[0];
-        if(!file) return alert("Seleziona un file!");
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const wb = XLSX.read(data, {type: 'array'});
-            const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-            let count = 0;
-            raw.forEach(r => {
-                const id = String(r.id || r.ISBN || r.Codice || Math.floor(Math.random()*1000000));
-                const title = r.title || r.Titolo || r.Nome;
-                if(title && !books.find(x => x.id === id)) {
-                    books.push({ id, title: title, out: false, kid: '', date: '' });
-                    count++;
-                }
+        const f = document.getElementById('xl-input').files[0];
+        if(!f) return;
+        const r = new FileReader();
+        r.onload = (e) => {
+            const wb = XLSX.read(e.target.result, {type:'array'});
+            const d = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            d.forEach(x => {
+                const id = String(x.id||x.ISBN||Math.random());
+                if(!books.find(b=>b.id===id)) books.push({id, title:x.title||x.Titolo, out:false});
             });
-            sync(); alert("Importati " + count + " nuovi libri!");
+            sync(); alert("Fatto!");
         };
-        reader.readAsArrayBuffer(file);
+        r.readAsArrayBuffer(f);
     }
 
-    function fullReset() { 
-        if(confirm("⚠️ ATTENZIONE: Questo cancellerà TUTTI i libri e i bambini.\nSei sicuro?")) { 
-            books=[]; kids=[]; sync(); 
-            alert("Database resettato.");
-        } 
-    }
+    function fullReset() { if(confirm("Cancellare tutto?")) { books=[]; kids=[]; sync(); } }
     
-    // Primo render all'avvio
     render();
 </script>
 </body>
-    </html>
-    
+                                                                                 </html>
+                                                                                          
