@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BiblioScuola PRO V7 + Scanner</title>
+    <title>BiblioScuola PRO V8 (Scanner Fix + Kids)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
     <style>
-        :root { --primary: #5a67d8; --secondary: #764ba2; --bg: #f4f7f6; --success: #48bb78; --danger: #e53e3e; --gray: #718096; }
+        :root { --primary: #5a67d8; --secondary: #764ba2; --bg: #f4f7f6; --success: #48bb78; --danger: #e53e3e; --warning: #ed8936; --gray: #718096; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #2d3748; padding-bottom: 40px; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #2d3748; padding-bottom: 60px; }
         .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; text-align: center; }
         .container { padding: 15px; max-width: 600px; margin: auto; }
         
@@ -29,26 +29,34 @@
         
         input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-sm { width: auto; padding: 5px 10px; font-size: 0.8rem; margin: 0; }
         .btn-scan { background: #2d3748; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
+        .btn-warning { background: var(--warning); }
 
         /* Scanner Camera */
-        #interactive.viewport { position: relative; width: 100%; height: 250px; overflow: hidden; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--primary); display: none; }
+        #interactive.viewport { position: relative; width: 100%; height: 300px; overflow: hidden; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--primary); display: none; background: black; }
         #interactive.viewport canvas, #interactive.viewport video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        /* Overlay box for scanner visual feedback */
+        .drawingBuffer { position: absolute; top: 0; left: 0; }
 
-        /* Search Results */
+        /* Search Results & Lists */
         .search-container { position: relative; }
         .search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 1000; border: 1px solid #e2e8f0; border-radius: 0 0 10px 10px; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .search-item { padding: 12px; border-bottom: 1px solid #f7fafc; cursor: pointer; }
 
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .scroll-area { max-height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 10px; }
+        .kid-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f9f9f9; border-radius: 8px; margin-bottom: 5px; }
+        .kid-actions { display: flex; gap: 5px; }
+
+        h3 { margin-bottom: 15px; color: var(--primary); }
+        h4 { margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
-<div class="header"><h1>📚 BiblioScuola PRO + Scan</h1></div>
+<div class="header"><h1>📚 BiblioScuola PRO V8</h1></div>
 
 <div class="container">
     <div class="stats">
@@ -96,45 +104,61 @@
     </div>
 
     <div id="tab-adm" class="card">
-        <h3>➕ Aggiungi</h3>
-        <select id="add-type" onchange="document.getElementById('f-b').style.display=(this.value=='book'?'block':'none');document.getElementById('f-k').style.display=(this.value=='kid'?'block':'none')">
-            <option value="book">Libro</option>
-            <option value="kid">Bambino</option>
+        <h3>➕ Aggiungi Rapido</h3>
+        <select id="add-type" onchange="toggleAddForm(this.value)">
+            <option value="book">Nuovo Libro</option>
+            <option value="kid">Nuovo Bambino</option>
         </select>
+        
         <div id="f-b">
-            <input type="text" id="m-id" placeholder="Codice ISBN / ID">
-            <input type="text" id="m-title" placeholder="Titolo">
+            <input type="text" id="m-id" placeholder="Codice ISBN (scansiona o scrivi)">
+            <input type="text" id="m-title" placeholder="Titolo Libro">
         </div>
         <div id="f-k" style="display:none">
-            <input type="text" id="m-k-name" placeholder="Nome Bambino">
+            <input type="text" id="m-k-name" placeholder="Nome e Cognome Bambino">
         </div>
         <button class="btn btn-success" onclick="manualAdd()">SALVA</button>
 
-        <h3 style="margin-top:20px">📁 Dati</h3>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+        <h3>👶 Lista Bambini Registrati</h3>
+        <div style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
+            <div id="admin-kids-list"></div>
+        </div>
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+        <h3>📁 Backup & Reset</h3>
         <button class="btn" style="background:var(--gray)" onclick="exportToExcel()">BACKUP EXCEL</button>
         <input type="file" id="xl-input" style="margin-top:10px">
         <button class="btn" style="background:var(--gray)" onclick="importFromExcel()">CARICA EXCEL</button>
         
-        <button class="btn btn-danger" style="margin-top:20px" onclick="fullReset()">RESET TOTALE</button>
+        <button class="btn btn-danger" style="margin-top:20px" onclick="fullReset()">RESET TOTALE DATI</button>
     </div>
 </div>
 
 <script>
-    let books = JSON.parse(localStorage.getItem('lib_v7_books')) || [];
-    let kids = JSON.parse(localStorage.getItem('lib_v7_kids')) || [];
+    let books = JSON.parse(localStorage.getItem('lib_v8_books')) || [];
+    let kids = JSON.parse(localStorage.getItem('lib_v8_kids')) || [];
     let selectedBookId = null;
     let scannerActive = false;
 
+    // --- NAVIGAZIONE ---
     function showTab(id, btn) {
         document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         btn.classList.add('active');
-        if(scannerActive) stopScanner();
+        if(scannerActive) stopScanner(); // Ferma camera se cambi scheda
         render();
     }
 
-    // --- LOGICA SCANNER ---
+    function toggleAddForm(val) {
+        document.getElementById('f-b').style.display = (val === 'book' ? 'block' : 'none');
+        document.getElementById('f-k').style.display = (val === 'kid' ? 'block' : 'none');
+    }
+
+    // --- LOGICA SCANNER POTENZIATA ---
     function toggleScanner() {
         if(scannerActive) stopScanner(); else startScanner();
     }
@@ -142,24 +166,84 @@
     function startScanner() {
         const view = document.getElementById('interactive');
         view.style.display = 'block';
-        scannerActive = true;
-        document.getElementById('btn-start-scan').innerText = "❌ CHIUDI CAMERA";
+        document.getElementById('btn-start-scan').innerText = "⏳ AVVIO CAMERA...";
 
         Quagga.init({
-            inputStream: { name: "Live", type: "LiveStream", target: view, constraints: { facingMode: "environment" } },
-            decoder: { readers: ["ean_reader", "ean_8_reader", "code_128_reader"] }
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: view,
+                constraints: {
+                    facingMode: "environment", // Usa camera posteriore
+                    width: { min: 640, ideal: 1280, max: 1920 }, // Risoluzione HD per leggere meglio
+                    height: { min: 480, ideal: 720, max: 1080 },
+                    aspectRatio: { min: 1, max: 2 }
+                }
+            },
+            locator: {
+                patchSize: "medium", // Aiuta a trovare il codice
+                halfSample: true
+            },
+            numOfWorkers: 2,
+            decoder: {
+                readers: ["ean_reader"] // Solo EAN per libri (più veloce)
+            },
+            locate: true // Attiva i quadratini verdi
         }, function(err) {
-            if (err) { alert("Errore camera: " + err); stopScanner(); return; }
+            if (err) { 
+                alert("Errore camera: " + err + "\nAssicurati di essere su HTTPS."); 
+                stopScanner(); 
+                return; 
+            }
             Quagga.start();
+            scannerActive = true;
+            document.getElementById('btn-start-scan').innerText = "❌ CHIUDI CAMERA";
         });
 
+        // Disegna i box verdi quando rileva qualcosa
+        Quagga.onProcessed(function(result) {
+            var drawingCtx = Quagga.canvas.ctx.overlay,
+                drawingCanvas = Quagga.canvas.dom.overlay;
+
+            if (result) {
+                if (result.boxes) {
+                    drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")));
+                    result.boxes.filter(function (box) {
+                        return box !== result.box;
+                    }).forEach(function (box) {
+                        Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
+                    });
+                }
+                if (result.box) {
+                    Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
+                }
+            }
+        });
+
+        // Quando trova il codice
         Quagga.onDetected(function(data) {
             const code = data.codeResult.code;
-            const book = books.find(b => b.id === code && !b.out);
-            if(book) {
-                selectMatch('book', book.title, book.id);
+            
+            // Suono beep (opzionale)
+            // let audio = new Audio('beep.mp3'); audio.play(); 
+
+            // Se siamo nella scheda PRESTITO
+            if(document.getElementById('tab-pre').classList.contains('active')) {
+                const book = books.find(b => b.id === code && !b.out);
+                if(book) {
+                    selectMatch('book', book.title, book.id);
+                    stopScanner();
+                    alert("✅ Libro trovato: " + book.title);
+                } else {
+                    // Feedback visivo momentaneo, ma non bloccare scanner
+                    console.log("Codice letto: " + code + " (non trovato o in prestito)");
+                }
+            } 
+            // Se siamo nella scheda GESTIONE (per aggiungere ID)
+            else if(document.getElementById('tab-adm').classList.contains('active')) {
+                document.getElementById('m-id').value = code;
                 stopScanner();
-                alert("Libro trovato: " + book.title);
+                alert("Codice acquisito: " + code);
             }
         });
     }
@@ -173,8 +257,8 @@
 
     // --- GESTIONE DATI ---
     function sync() {
-        localStorage.setItem('lib_v7_books', JSON.stringify(books));
-        localStorage.setItem('lib_v7_kids', JSON.stringify(kids));
+        localStorage.setItem('lib_v8_books', JSON.stringify(books));
+        localStorage.setItem('lib_v8_kids', JSON.stringify(kids));
         render();
     }
 
@@ -202,72 +286,141 @@
         if(type === 'book') selectedBookId = id;
     }
 
+    // --- NUOVE FUNZIONI GESTIONE BAMBINI ---
+    function deleteKid(index) {
+        if(confirm("Sei sicuro di voler eliminare " + kids[index] + "?")) {
+            kids.splice(index, 1);
+            sync();
+        }
+    }
+
+    function editKid(index) {
+        const oldName = kids[index];
+        const newName = prompt("Modifica nome:", oldName);
+        if(newName && newName.trim() !== "") {
+            kids[index] = newName.trim();
+            // Opzionale: aggiorna anche i prestiti attivi con il vecchio nome?
+            // Per ora lo lasciamo semplice.
+            sync();
+        }
+    }
+
     function manualAdd() {
         const type = document.getElementById('add-type').value;
         if(type === 'book') {
-            books.push({ id: document.getElementById('m-id').value, title: document.getElementById('m-title').value, out: false, kid: '', date: '' });
+            const id = document.getElementById('m-id').value;
+            const title = document.getElementById('m-title').value;
+            if(!id || !title) return alert("Inserisci ID e Titolo");
+            if(books.find(b => b.id === id)) return alert("ID già esistente!");
+            
+            books.push({ id: id, title: title, out: false, kid: '', date: '' });
+            document.getElementById('m-id').value = '';
+            document.getElementById('m-title').value = '';
         } else {
-            kids.push(document.getElementById('m-k-name').value);
+            const name = document.getElementById('m-k-name').value;
+            if(!name) return alert("Inserisci Nome");
+            if(kids.includes(name)) return alert("Bambino già in lista!");
+            kids.push(name);
+            document.getElementById('m-k-name').value = '';
         }
-        sync(); alert("Aggiunto!");
+        sync(); alert("Salvato!");
     }
 
     function execLoan() {
         const kid = document.getElementById('in-kid').value;
-        if(!kids.includes(kid) || !selectedBookId) return alert("Seleziona libro e bambino!");
+        if(!kids.includes(kid)) return alert("Bambino non trovato nella lista!");
+        if(!selectedBookId) return alert("Seleziona un libro valido!");
+        
         const b = books.find(x => x.id === selectedBookId);
+        if(!b) return alert("Errore libro");
+
         b.out = true; b.kid = kid; b.date = new Date().toLocaleDateString();
         selectedBookId = null; sync();
         document.getElementById('in-kid').value = ''; document.getElementById('in-book').value = '';
-        alert("Prestito registrato!");
+        alert("✅ Prestito registrato a " + kid);
     }
 
     function execReturn(id) {
+        if(!confirm("Confermi il reso del libro?")) return;
         const b = books.find(x => x.id === id);
         b.out = false; b.kid = ''; b.date = '';
         sync();
     }
 
     function render() {
+        // Stats
         document.getElementById('s-tot').innerText = books.length;
         document.getElementById('s-pre').innerText = books.filter(x => x.out).length;
         document.getElementById('s-kids').innerText = kids.length;
 
+        // Lista Resi (Libri fuori)
         document.getElementById('list-res').innerHTML = books.filter(x => x.out).map(b => `
-            <div class="list-item"><div><h4>${b.title}</h4><p>${b.kid}</p></div><button class="btn btn-sm btn-success" onclick="execReturn('${b.id}')">RESO</button></div>
-        `).join('') || 'Nessun prestito';
+            <div class="list-item">
+                <div><h4>${b.title}</h4><p>👦 ${b.kid} - 📅 ${b.date}</p></div>
+                <button class="btn btn-sm btn-success" onclick="execReturn('${b.id}')">RESO</button>
+            </div>
+        `).join('') || '<p style="text-align:center;color:#999">Nessun libro in prestito</p>';
 
+        // Lista Catalogo
         const q = document.getElementById('search-cat').value.toLowerCase();
         document.getElementById('list-cat').innerHTML = books.filter(x => x.title.toLowerCase().includes(q)).map(b => `
-            <div class="list-item"><div><h4>${b.title}</h4><p>ID: ${b.id}</p></div><span style="color:${b.out?'red':'green'}">${b.out?'FUORI':'LIBERO'}</span></div>
+            <div class="list-item">
+                <div><h4>${b.title}</h4><p style="font-size:0.8rem;color:#666">ISBN: ${b.id}</p></div>
+                <span style="font-weight:bold; color:${b.out?'var(--danger)':'var(--success)'}">${b.out?'FUORI':'DISP.'}</span>
+            </div>
         `).join('');
+
+        // Lista Bambini (Admin)
+        document.getElementById('admin-kids-list').innerHTML = kids.map((k, i) => `
+            <div class="kid-item">
+                <span>${k}</span>
+                <div class="kid-actions">
+                    <button class="btn btn-sm btn-warning" onclick="editKid(${i})">✏️</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteKid(${i})">🗑️</button>
+                </div>
+            </div>
+        `).join('') || '<p>Nessun bambino registrato.</p>';
     }
 
     function exportToExcel() {
         const ws = XLSX.utils.json_to_sheet(books);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Libri");
-        XLSX.writeFile(wb, "Backup.xlsx");
+        XLSX.writeFile(wb, "Biblio_Backup.xlsx");
     }
 
     function importFromExcel() {
         const file = document.getElementById('xl-input').files[0];
+        if(!file) return alert("Seleziona un file!");
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, {type: 'array'});
             const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            let count = 0;
             raw.forEach(r => {
-                const id = String(r.id || r.ISBN || Math.random());
-                if(!books.find(x => x.id === id)) books.push({ id, title: r.title || r.Titolo, out: false, kid: '', date: '' });
+                const id = String(r.id || r.ISBN || r.Codice || Math.floor(Math.random()*1000000));
+                const title = r.title || r.Titolo || r.Nome;
+                if(title && !books.find(x => x.id === id)) {
+                    books.push({ id, title: title, out: false, kid: '', date: '' });
+                    count++;
+                }
             });
-            sync(); alert("Importati!");
+            sync(); alert("Importati " + count + " nuovi libri!");
         };
         reader.readAsArrayBuffer(file);
     }
 
-    function fullReset() { if(confirm("Cancello tutto?")) { books=[]; kids=[]; sync(); } }
+    function fullReset() { 
+        if(confirm("⚠️ ATTENZIONE: Questo cancellerà TUTTI i libri e i bambini.\nSei sicuro?")) { 
+            books=[]; kids=[]; sync(); 
+            alert("Database resettato.");
+        } 
+    }
+    
+    // Primo render all'avvio
     render();
 </script>
 </body>
-</html>
+    </html>
+    
