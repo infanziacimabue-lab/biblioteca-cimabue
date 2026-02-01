@@ -48,7 +48,6 @@
             border-radius: 12px; 
             text-align: center; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.2s;
         }
         .stat-num { font-weight: bold; color: var(--primary); font-size: 1.2rem; display: block; }
         .stat-label { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -63,63 +62,34 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
         }
         .nav-btn { 
-            flex: 1; 
-            border: none; 
-            padding: 15px 5px; 
-            background: none; 
-            font-weight: 600; 
-            color: var(--gray); 
-            font-size: 0.7rem; 
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
+            flex: 1; border: none; padding: 15px 5px; background: none; 
+            font-weight: 600; color: var(--gray); font-size: 0.7rem; 
+            cursor: pointer; transition: all 0.3s ease; border-bottom: 3px solid transparent;
         }
         .nav-btn.active { 
-            color: var(--primary); 
-            border-bottom-color: var(--primary); 
-            background: #f0f7ff; 
+            color: var(--primary); border-bottom-color: var(--primary); background: #f0f7ff; 
         }
 
-        /* Cards and Sections */
+        /* Cards */
         .card { 
-            background: var(--white); 
-            padding: 20px; 
-            border-radius: 20px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05); 
-            margin-bottom: 20px; 
-            display: none;
-            animation: fadeIn 0.4s ease;
+            background: var(--white); padding: 20px; border-radius: 20px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; 
+            display: none; animation: fadeIn 0.4s ease;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .card.active { display: block; }
         
         h3 { margin-bottom: 18px; font-size: 1.1rem; color: var(--dark); border-left: 4px solid var(--primary); padding-left: 10px; }
 
-        /* Forms */
+        /* Inputs & Buttons */
         input, select { 
-            width: 100%; 
-            padding: 12px 15px; 
-            margin-bottom: 15px; 
-            border: 1px solid #e1e8ed; 
-            border-radius: 12px; 
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 100%; padding: 12px 15px; margin-bottom: 15px; 
+            border: 1px solid #e1e8ed; border-radius: 12px; font-size: 1rem; outline: none;
         }
-        input:focus { border-color: var(--primary); }
-
         .btn { 
-            width: 100%; 
-            padding: 14px; 
-            border: none; 
-            border-radius: 12px; 
-            background: var(--primary); 
-            color: white; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: opacity 0.2s;
+            width: 100%; padding: 14px; border: none; border-radius: 12px; 
+            background: var(--primary); color: white; font-weight: bold; cursor: pointer; 
         }
-        .btn:active { opacity: 0.8; }
         .btn-scan { background: var(--dark); display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
@@ -130,48 +100,30 @@
 
         /* Lists */
         .list-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 12px 0; 
-            border-bottom: 1px solid #f1f1f1; 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 0; border-bottom: 1px solid #f1f1f1; 
         }
-        .list-item:last-child { border-bottom: none; }
         .item-info h4 { font-size: 0.95rem; margin-bottom: 2px; }
         .item-info p { font-size: 0.8rem; color: var(--gray); }
         
-        .badge { 
-            padding: 4px 8px; 
-            border-radius: 6px; 
-            font-size: 0.7rem; 
-            font-weight: bold; 
-            text-transform: uppercase;
-        }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
         .badge-out { background: #ffebeb; color: var(--danger); }
         .badge-in { background: #ebffef; color: var(--success); }
 
         .search-results { 
-            background: white; 
-            border-radius: 0 0 12px 12px; 
-            max-height: 200px; 
-            overflow-y: auto; 
-            border: 1px solid #e1e8ed; 
-            margin-top: -15px; 
-            margin-bottom: 15px;
-            display: none;
+            background: white; border-radius: 0 0 12px 12px; max-height: 200px; 
+            overflow-y: auto; border: 1px solid #e1e8ed; margin-top: -15px; 
+            margin-bottom: 15px; display: none;
         }
         .search-item { padding: 12px; border-bottom: 1px solid #f8f9fa; cursor: pointer; }
 
-        .btn-delete { 
-            background: none; 
-            border: none; 
-            color: #ccc; 
-            cursor: pointer; 
-            font-size: 1.1rem;
-            padding: 5px;
-            transition: color 0.2s;
+        .action-btns { display: flex; gap: 10px; }
+        .btn-icon { 
+            background: none; border: none; cursor: pointer; font-size: 1.1rem; 
+            padding: 5px; transition: opacity 0.2s; color: #ccc;
         }
-        .btn-delete:hover { color: var(--danger); }
+        .btn-icon:hover { opacity: 0.7; color: var(--primary); }
+        .btn-icon.delete:hover { color: var(--danger); }
     </style>
 </head>
 <body>
@@ -202,7 +154,7 @@
         <input type="text" id="in-book" placeholder="Cerca libro per titolo..." onkeyup="filterSearch('book')">
         <div id="res-book" class="search-results"></div>
 
-        <input type="text" id="in-kid" placeholder="Cerca o scrivi nome bambino..." onkeyup="filterSearch('kid')">
+        <input type="text" id="in-kid" placeholder="Cerca bambino..." onkeyup="filterSearch('kid')">
         <div id="res-kid" class="search-results"></div>
 
         <button class="btn btn-success" onclick="execLoan()">REGISTRA PRESTITO</button>
@@ -295,9 +247,9 @@
         if(book) {
             selectMatch('book', book.title, book.id);
             stopScanner();
-            alert("Libro selezionato: " + book.title);
+            alert("Libro trovato: " + book.title);
         } else {
-            if(confirm("Libro non in catalogo. Vuoi aggiungerlo?")) {
+            if(confirm("Libro non trovato. Vuoi aggiungerlo?")) {
                 showTab('tab-adm', document.querySelectorAll('.nav-btn')[3]);
                 document.getElementById('m-id').value = decodedText;
             }
@@ -334,8 +286,24 @@
         if(type === 'book') selectedBookId = id;
     }
 
+    // BAMBINI: Modifica e Elimina
+    function deleteKid(index) {
+        if(confirm("Eliminare " + kids[index] + "?")) {
+            kids.splice(index, 1);
+            sync();
+        }
+    }
+
+    function editKid(index) {
+        const newName = prompt("Modifica nome bambino:", kids[index]);
+        if(newName && newName.trim() !== "") {
+            kids[index] = newName.trim();
+            sync();
+        }
+    }
+
     function deleteBook(id) {
-        if(confirm("Eliminare definitivamente questo libro dal catalogo?")) {
+        if(confirm("Eliminare questo libro dal catalogo?")) {
             books = books.filter(b => b.id !== id);
             sync();
         }
@@ -346,12 +314,12 @@
         if(type === 'book') {
             const id = document.getElementById('m-id').value;
             const title = document.getElementById('m-title').value;
-            if(!id || !title) return alert("Compila tutto");
+            if(!id || !title) return alert("Dati incompleti");
             books.push({ id, title, out: false, kid: '', date: '' });
         } else {
             const name = document.getElementById('m-k-name').value;
             if(!name) return;
-            kids.push(name);
+            kids.push(name.trim());
         }
         sync();
         alert("Salvato correttamente");
@@ -359,13 +327,14 @@
 
     function execLoan() {
         const kid = document.getElementById('in-kid').value;
-        if(!kid || !selectedBookId) return alert("Seleziona libro e bambino");
+        if(!kid || !selectedBookId) return alert("Dati prestito incompleti");
         const b = books.find(x => x.id === selectedBookId);
         b.out = true; b.kid = kid; b.date = new Date().toLocaleDateString();
         selectedBookId = null;
         document.getElementById('in-book').value = '';
         document.getElementById('in-kid').value = '';
         sync();
+        alert("Prestito registrato!");
     }
 
     function execReturn(id) {
@@ -382,7 +351,7 @@
         // Resi
         document.getElementById('list-res').innerHTML = books.filter(x => x.out).map(b => `
             <div class="list-item">
-                <div class="item-info"><h4>${b.title}</h4><p>In prestito a: ${b.kid}</p></div>
+                <div class="item-info"><h4>${b.title}</h4><p>👦 ${b.kid}</p></div>
                 <button class="btn btn-sm btn-success" onclick="execReturn('${b.id}')">RESO</button>
             </div>
         `).join('') || '<p style="color:#bbb; text-align:center">Nessun prestito attivo</p>';
@@ -395,15 +364,18 @@
                     <h4>${b.title}</h4>
                     <span class="badge ${b.out?'badge-out':'badge-in'}">${b.out?'Fuori':'Disponibile'}</span>
                 </div>
-                <button class="btn-delete" onclick="deleteBook('${b.id}')" title="Elimina">🗑️</button>
+                <button class="btn-icon delete" onclick="deleteBook('${b.id}')">🗑️</button>
             </div>
         `).join('');
 
-        // Bambini admin
+        // Bambini in Gestione
         document.getElementById('admin-kids-list').innerHTML = kids.map((k, i) => `
             <div class="list-item">
                 <span>${k}</span>
-                <button class="btn-delete" onclick="kids.splice(${i},1); sync()">🗑️</button>
+                <div class="action-btns">
+                    <button class="btn-icon" onclick="editKid(${i})" title="Modifica">✏️</button>
+                    <button class="btn-icon delete" onclick="deleteKid(${i})" title="Elimina">🗑️</button>
+                </div>
             </div>
         `).join('');
     }
@@ -436,5 +408,5 @@
     render();
 </script>
 </body>
-                                                                      </html>
-        
+            </html>
+    
