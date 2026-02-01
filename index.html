@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cimabue Biblioteca</title>
+    
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3389/3389081.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3389/3389081.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4a90e2">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
@@ -267,14 +275,13 @@
     function execLoan() {
         const kid = document.getElementById('in-kid').value;
         
-        // Controllo validità
-        if(!kid || !kids.includes(kid)) return alert("Bambino non valido o non selezionato dalla lista.");
+        if(!kid || !kids.includes(kid)) return alert("Bambino non valido o non selezionato.");
         if(!selectedBookId) return alert("Seleziona un libro.");
         
-        // NUOVO CONTROLLO: Il bambino ha già un libro?
+        // Controllo "Uno alla volta"
         const activeLoan = books.find(b => b.out && b.kid === kid);
         if(activeLoan) {
-            alert(`⚠️ STOP: ${kid} ha già in prestito il libro:\n"${activeLoan.title}"\nDeve restituirlo prima di prenderne un altro.`);
+            alert(`⚠️ STOP: ${kid} ha già in prestito il libro:\n"${activeLoan.title}"\nDeve restituirlo prima.`);
             return;
         }
 
@@ -286,7 +293,7 @@
         document.getElementById('in-book').value = '';
         document.getElementById('in-kid').value = '';
         sync();
-        alert("✅ Prestito registrato con successo!");
+        alert("✅ Prestito registrato!");
     }
 
     function execReturn(id) {
@@ -360,5 +367,5 @@
     render();
 </script>
 </body>
-            </html>
-            
+        </html>
+    
