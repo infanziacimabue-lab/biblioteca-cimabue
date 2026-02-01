@@ -9,88 +9,44 @@
     
     <style>
         :root { 
-            --primary: #4a90e2; 
-            --secondary: #357abd; 
-            --bg: #f8f9fa; 
-            --white: #ffffff;
-            --success: #2ecc71; 
-            --danger: #e74c3c; 
-            --warning: #f1c40f; 
-            --gray: #95a5a6; 
-            --dark: #2c3e50;
+            --primary: #4a90e2; --secondary: #357abd; --bg: #f8f9fa; 
+            --white: #ffffff; --success: #2ecc71; --danger: #e74c3c; 
+            --warning: #f1c40f; --gray: #95a5a6; --dark: #2c3e50;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--dark); line-height: 1.6; padding-bottom: 50px; }
         
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--bg); color: var(--dark); line-height: 1.6;
-        }
-
-        .header { 
-            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            color: white; padding: 25px 15px; text-align: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
+        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 25px 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 600px; margin: auto; }
         
         /* Stats */
         .stats { display: flex; gap: 10px; margin-top: -20px; margin-bottom: 25px; }
-        .stat-card { 
-            flex: 1; background: var(--white); padding: 12px; border-radius: 12px; 
-            text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
+        .stat-card { flex: 1; background: var(--white); padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .stat-num { font-weight: bold; color: var(--primary); font-size: 1.2rem; display: block; }
         .stat-label { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Navigation */
-        .nav { 
-            display: flex; background: var(--white); border-radius: 15px; 
-            overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
-        }
-        .nav-btn { 
-            flex: 1; border: none; padding: 15px 5px; background: none; 
-            font-weight: 600; color: var(--gray); font-size: 0.7rem; 
-            cursor: pointer; transition: all 0.3s ease; border-bottom: 3px solid transparent;
-        }
-        .nav-btn.active { 
-            color: var(--primary); border-bottom-color: var(--primary); background: #f0f7ff; 
-        }
+        /* Nav */
+        .nav { display: flex; background: var(--white); border-radius: 15px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .nav-btn { flex: 1; border: none; padding: 15px 5px; background: none; font-weight: 600; color: var(--gray); font-size: 0.7rem; cursor: pointer; transition: all 0.3s ease; border-bottom: 3px solid transparent; }
+        .nav-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f0f7ff; }
 
-        /* Cards */
-        .card { 
-            background: var(--white); padding: 20px; border-radius: 20px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; 
-            display: none; animation: fadeIn 0.4s ease;
-        }
+        /* Card */
+        .card { background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; display: none; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .card.active { display: block; }
         
         h3 { margin-bottom: 18px; font-size: 1.1rem; color: var(--dark); border-left: 4px solid var(--primary); padding-left: 10px; }
-
-        /* Inputs & Buttons */
-        input, select { 
-            width: 100%; padding: 12px 15px; margin-bottom: 15px; 
-            border: 1px solid #e1e8ed; border-radius: 12px; font-size: 1rem; outline: none;
-        }
-        .btn { 
-            width: 100%; padding: 14px; border: none; border-radius: 12px; 
-            background: var(--primary); color: white; font-weight: bold; cursor: pointer; 
-        }
+        input, select { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #e1e8ed; border-radius: 12px; font-size: 1rem; outline: none; }
+        
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
         .btn-scan { background: var(--dark); display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-sm { width: auto; padding: 6px 12px; font-size: 0.8rem; }
 
-        /* Scanner */
         #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-bottom: 15px; display: none; border: 2px solid var(--primary); }
 
-        /* Lists */
-        .list-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px 0; border-bottom: 1px solid #f1f1f1; 
-        }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f1f1; }
         .item-info h4 { font-size: 0.95rem; margin-bottom: 2px; }
         .item-info p { font-size: 0.8rem; color: var(--gray); }
         
@@ -98,21 +54,11 @@
         .badge-out { background: #ffebeb; color: var(--danger); }
         .badge-in { background: #ebffef; color: var(--success); }
 
-        .search-results { 
-            background: white; border-radius: 0 0 12px 12px; max-height: 200px; 
-            overflow-y: auto; border: 1px solid #e1e8ed; margin-top: -15px; 
-            margin-bottom: 15px; display: none;
-        }
+        .search-results { background: white; border-radius: 0 0 12px 12px; max-height: 200px; overflow-y: auto; border: 1px solid #e1e8ed; margin-top: -15px; margin-bottom: 15px; display: none; }
         .search-item { padding: 12px; border-bottom: 1px solid #f8f9fa; cursor: pointer; }
 
-        /* Bottoni Azione */
         .action-btns { display: flex; gap: 12px; align-items: center; }
-        .btn-icon { 
-            background: none; border: none; cursor: pointer; font-size: 1.2rem; 
-            padding: 4px; transition: transform 0.1s; display: inline-flex;
-            align-items: center; justify-content: center;
-        }
-        .btn-icon:active { transform: scale(0.9); }
+        .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 4px; display: inline-flex; }
         .btn-icon.edit { color: var(--warning); }
         .btn-icon.delete { color: var(--danger); }
     </style>
@@ -229,9 +175,13 @@
     function onScanSuccess(decodedText) {
         const book = books.find(b => b.id === decodedText);
         if(book) {
-            selectMatch('book', book.title, book.id);
-            stopScanner();
-            alert("Libro trovato: " + book.title);
+            if(book.out) {
+                alert("⚠️ Questo libro è già in prestito a " + book.kid);
+            } else {
+                selectMatch('book', book.title, book.id);
+                stopScanner();
+                alert("Libro trovato: " + book.title);
+            }
         } else {
             if(confirm("Libro non in catalogo. Aggiungerlo?")) {
                 showTab('tab-adm', document.querySelectorAll('.nav-btn')[3]);
@@ -252,13 +202,23 @@
         const res = document.getElementById('res-' + type);
         const q = inpt.value.toLowerCase();
         if(q.length < 1) { res.style.display='none'; return; }
+        
         let html = '';
         if(type === 'kid') {
             const matches = kids.filter(k => k.toLowerCase().includes(q));
-            html = matches.map(m => `<div class="search-item" onclick="selectMatch('kid','${m}')">${m}</div>`).join('');
+            // Fix apostrofo nei nomi
+            html = matches.map(m => {
+                const safeName = m.replace(/'/g, "\\'");
+                return `<div class="search-item" onclick="selectMatch('kid','${safeName}')">${m}</div>`;
+            }).join('');
         } else {
             const matches = books.filter(b => !b.out && b.title.toLowerCase().includes(q));
-            html = matches.map(m => `<div class="search-item" onclick="selectMatch('book','${m.title}','${m.id}')">${m.title}</div>`).join('');
+            // Fix apostrofo nei titoli
+            html = matches.map(m => {
+                const safeTitle = m.title.replace(/'/g, "\\'");
+                const safeId = m.id.replace(/'/g, "\\'");
+                return `<div class="search-item" onclick="selectMatch('book','${safeTitle}','${safeId}')">${m.title}</div>`;
+            }).join('');
         }
         res.innerHTML = html;
         res.style.display = html ? 'block' : 'none';
@@ -270,7 +230,6 @@
         if(type === 'book') selectedBookId = id;
     }
 
-    // BAMBINI
     function deleteKid(index) {
         if(confirm("Eliminare definitivamente " + kids[index] + "?")) {
             kids.splice(index, 1); sync();
@@ -307,13 +266,27 @@
 
     function execLoan() {
         const kid = document.getElementById('in-kid').value;
-        if(!kid || !selectedBookId) return alert("Seleziona libro e bambino");
+        
+        // Controllo validità
+        if(!kid || !kids.includes(kid)) return alert("Bambino non valido o non selezionato dalla lista.");
+        if(!selectedBookId) return alert("Seleziona un libro.");
+        
+        // NUOVO CONTROLLO: Il bambino ha già un libro?
+        const activeLoan = books.find(b => b.out && b.kid === kid);
+        if(activeLoan) {
+            alert(`⚠️ STOP: ${kid} ha già in prestito il libro:\n"${activeLoan.title}"\nDeve restituirlo prima di prenderne un altro.`);
+            return;
+        }
+
         const b = books.find(x => x.id === selectedBookId);
+        if(!b) return alert("Errore nel recupero del libro.");
+
         b.out = true; b.kid = kid; b.date = new Date().toLocaleDateString();
         selectedBookId = null;
         document.getElementById('in-book').value = '';
         document.getElementById('in-kid').value = '';
         sync();
+        alert("✅ Prestito registrato con successo!");
     }
 
     function execReturn(id) {
@@ -347,7 +320,7 @@
             </div>
         `).join('');
 
-        // Bambini (Gestione) - QUI LA CORREZIONE
+        // Bambini
         document.getElementById('admin-kids-list').innerHTML = kids.map((k, i) => `
             <div class="list-item">
                 <span>${k}</span>
@@ -387,5 +360,5 @@
     render();
 </script>
 </body>
-    </html>
-    
+            </html>
+            
