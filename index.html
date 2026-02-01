@@ -24,16 +24,12 @@
         
         body { 
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--bg); 
-            color: var(--dark); 
-            line-height: 1.6;
+            background: var(--bg); color: var(--dark); line-height: 1.6;
         }
 
         .header { 
             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            color: white; 
-            padding: 25px 15px; 
-            text-align: center; 
+            color: white; padding: 25px 15px; text-align: center; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
@@ -42,24 +38,16 @@
         /* Stats */
         .stats { display: flex; gap: 10px; margin-top: -20px; margin-bottom: 25px; }
         .stat-card { 
-            flex: 1; 
-            background: var(--white); 
-            padding: 12px; 
-            border-radius: 12px; 
-            text-align: center; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            flex: 1; background: var(--white); padding: 12px; border-radius: 12px; 
+            text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
         .stat-num { font-weight: bold; color: var(--primary); font-size: 1.2rem; display: block; }
         .stat-label { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; }
 
         /* Navigation */
         .nav { 
-            display: flex; 
-            background: var(--white); 
-            border-radius: 15px; 
-            overflow: hidden; 
-            margin-bottom: 20px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
+            display: flex; background: var(--white); border-radius: 15px; 
+            overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
         }
         .nav-btn { 
             flex: 1; border: none; padding: 15px 5px; background: none; 
@@ -117,13 +105,16 @@
         }
         .search-item { padding: 12px; border-bottom: 1px solid #f8f9fa; cursor: pointer; }
 
-        .action-btns { display: flex; gap: 10px; }
+        /* Bottoni Azione */
+        .action-btns { display: flex; gap: 12px; align-items: center; }
         .btn-icon { 
-            background: none; border: none; cursor: pointer; font-size: 1.1rem; 
-            padding: 5px; transition: opacity 0.2s; color: #ccc;
+            background: none; border: none; cursor: pointer; font-size: 1.2rem; 
+            padding: 4px; transition: transform 0.1s; display: inline-flex;
+            align-items: center; justify-content: center;
         }
-        .btn-icon:hover { opacity: 0.7; color: var(--primary); }
-        .btn-icon.delete:hover { color: var(--danger); }
+        .btn-icon:active { transform: scale(0.9); }
+        .btn-icon.edit { color: var(--warning); }
+        .btn-icon.delete { color: var(--danger); }
     </style>
 </head>
 <body>
@@ -150,13 +141,10 @@
         <h3>Nuovo Prestito</h3>
         <div id="reader"></div>
         <button id="btn-start-scan" class="btn btn-scan" onclick="toggleScanner()">📸 SCANSIONA ISBN</button>
-
-        <input type="text" id="in-book" placeholder="Cerca libro per titolo..." onkeyup="filterSearch('book')">
+        <input type="text" id="in-book" placeholder="Cerca libro..." onkeyup="filterSearch('book')">
         <div id="res-book" class="search-results"></div>
-
         <input type="text" id="in-kid" placeholder="Cerca bambino..." onkeyup="filterSearch('kid')">
         <div id="res-kid" class="search-results"></div>
-
         <button class="btn btn-success" onclick="execLoan()">REGISTRA PRESTITO</button>
     </div>
 
@@ -167,7 +155,7 @@
 
     <div id="tab-cat" class="card">
         <h3>Catalogo Libri</h3>
-        <input type="text" id="search-cat" placeholder="Filtra catalogo..." onkeyup="render()">
+        <input type="text" id="search-cat" placeholder="Filtra libri..." onkeyup="render()">
         <div id="list-cat"></div>
     </div>
 
@@ -177,7 +165,6 @@
             <option value="book">Libro</option>
             <option value="kid">Bambino</option>
         </select>
-        
         <div id="f-b">
             <input type="text" id="m-id" placeholder="Codice ISBN">
             <input type="text" id="m-title" placeholder="Titolo Libro">
@@ -188,17 +175,14 @@
         <button class="btn btn-success" onclick="manualAdd()">SALVA</button>
 
         <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
-
         <h3>Lista Bambini</h3>
         <div id="admin-kids-list"></div>
 
         <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
-
         <h3>Dati ed Excel</h3>
         <button class="btn" style="background:var(--gray); margin-bottom: 10px;" onclick="exportToExcel()">ESPORTA BACKUP</button>
         <input type="file" id="xl-input" style="font-size: 0.8rem;">
         <button class="btn" style="background:var(--gray)" onclick="importFromExcel()">IMPORTA EXCEL</button>
-        
         <button class="btn btn-danger" style="margin-top:30px; background:#ff7675" onclick="fullReset()">RESET TOTALE</button>
     </div>
 </div>
@@ -249,14 +233,14 @@
             stopScanner();
             alert("Libro trovato: " + book.title);
         } else {
-            if(confirm("Libro non trovato. Vuoi aggiungerlo?")) {
+            if(confirm("Libro non in catalogo. Aggiungerlo?")) {
                 showTab('tab-adm', document.querySelectorAll('.nav-btn')[3]);
                 document.getElementById('m-id').value = decodedText;
             }
         }
     }
 
-    // LOGICA DATI
+    // DATI
     function sync() {
         localStorage.setItem('cimabue_books', JSON.stringify(books));
         localStorage.setItem('cimabue_kids', JSON.stringify(kids));
@@ -286,26 +270,23 @@
         if(type === 'book') selectedBookId = id;
     }
 
-    // BAMBINI: Modifica e Elimina
+    // BAMBINI
     function deleteKid(index) {
-        if(confirm("Eliminare " + kids[index] + "?")) {
-            kids.splice(index, 1);
-            sync();
+        if(confirm("Eliminare definitivamente " + kids[index] + "?")) {
+            kids.splice(index, 1); sync();
         }
     }
 
     function editKid(index) {
         const newName = prompt("Modifica nome bambino:", kids[index]);
         if(newName && newName.trim() !== "") {
-            kids[index] = newName.trim();
-            sync();
+            kids[index] = newName.trim(); sync();
         }
     }
 
     function deleteBook(id) {
-        if(confirm("Eliminare questo libro dal catalogo?")) {
-            books = books.filter(b => b.id !== id);
-            sync();
+        if(confirm("Eliminare questo libro?")) {
+            books = books.filter(b => b.id !== id); sync();
         }
     }
 
@@ -314,27 +295,25 @@
         if(type === 'book') {
             const id = document.getElementById('m-id').value;
             const title = document.getElementById('m-title').value;
-            if(!id || !title) return alert("Dati incompleti");
+            if(!id || !title) return alert("Compila i campi");
             books.push({ id, title, out: false, kid: '', date: '' });
         } else {
             const name = document.getElementById('m-k-name').value;
             if(!name) return;
             kids.push(name.trim());
         }
-        sync();
-        alert("Salvato correttamente");
+        sync(); alert("Salvato!");
     }
 
     function execLoan() {
         const kid = document.getElementById('in-kid').value;
-        if(!kid || !selectedBookId) return alert("Dati prestito incompleti");
+        if(!kid || !selectedBookId) return alert("Seleziona libro e bambino");
         const b = books.find(x => x.id === selectedBookId);
         b.out = true; b.kid = kid; b.date = new Date().toLocaleDateString();
         selectedBookId = null;
         document.getElementById('in-book').value = '';
         document.getElementById('in-kid').value = '';
         sync();
-        alert("Prestito registrato!");
     }
 
     function execReturn(id) {
@@ -351,7 +330,7 @@
         // Resi
         document.getElementById('list-res').innerHTML = books.filter(x => x.out).map(b => `
             <div class="list-item">
-                <div class="item-info"><h4>${b.title}</h4><p>👦 ${b.kid}</p></div>
+                <div class="item-info"><h4>${b.title}</h4><p>👧 ${b.kid}</p></div>
                 <button class="btn btn-sm btn-success" onclick="execReturn('${b.id}')">RESO</button>
             </div>
         `).join('') || '<p style="color:#bbb; text-align:center">Nessun prestito attivo</p>';
@@ -368,16 +347,16 @@
             </div>
         `).join('');
 
-        // Bambini in Gestione
+        // Bambini (Gestione) - QUI LA CORREZIONE
         document.getElementById('admin-kids-list').innerHTML = kids.map((k, i) => `
             <div class="list-item">
                 <span>${k}</span>
                 <div class="action-btns">
-                    <button class="btn-icon" onclick="editKid(${i})" title="Modifica">✏️</button>
+                    <button class="btn-icon edit" onclick="editKid(${i})" title="Modifica">✏️</button>
                     <button class="btn-icon delete" onclick="deleteKid(${i})" title="Elimina">🗑️</button>
                 </div>
             </div>
-        `).join('');
+        `).join('') || '<p style="color:#bbb">Nessun bambino registrato</p>';
     }
 
     function exportToExcel() {
@@ -403,10 +382,10 @@
         r.readAsArrayBuffer(f);
     }
 
-    function fullReset() { if(confirm("Cancellare l'intera biblioteca?")) { books=[]; kids=[]; sync(); } }
+    function fullReset() { if(confirm("Cancellare tutto?")) { books=[]; kids=[]; sync(); } }
     
     render();
 </script>
 </body>
-            </html>
+    </html>
     
